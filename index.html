@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>Chris Inspection Assistant</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --text: #111827;
+      --muted: #5b6472;
+      --line: #d8dee8;
+      --brand: #111827;
+      --brand2: #2563eb;
+      --good: #15803d;
+      --warn: #b45309;
+      --bad: #b91c1c;
+      --radius: 16px;
+      --shadow: 0 12px 30px rgba(17, 24, 39, .09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.35;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: linear-gradient(135deg, #111827, #1f2937 55%, #2563eb);
+      color: white;
+      padding: 18px 16px 14px;
+      box-shadow: 0 8px 18px rgba(17, 24, 39, .18);
+    }
+    header h1 { margin: 0; font-size: 1.25rem; letter-spacing: .2px; }
+    header p { margin: 5px 0 0; color: #d8e2ff; font-size: .9rem; }
+    main { max-width: 980px; margin: 0 auto; padding: 14px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin: 12px 0;
+    }
+    .card h2 { font-size: 1.05rem; margin: 0 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    label { display: block; font-size: .82rem; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    input, select, textarea, button {
+      width: 100%;
+      font: inherit;
+      border-radius: 11px;
+    }
+    input, select, textarea {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 10px 11px;
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--brand2); box-shadow: 0 0 0 3px rgba(37, 99, 235, .14); }
+    textarea { min-height: 88px; resize: vertical; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .pillbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      width: auto;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 9px 11px;
+      border-radius: 999px;
+      font-size: .9rem;
+      cursor: pointer;
+    }
+    .pill.active { background: #dbeafe; border-color: #60a5fa; color: #1e3a8a; font-weight: 800; }
+    .checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .checkitem {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 9px;
+      background: #fbfcfe;
+    }
+    .checkitem input { width: 20px; height: 20px; flex: 0 0 auto; }
+    .checkitem span { font-size: .94rem; font-weight: 650; }
+    .photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .photoBox {
+      border: 1px dashed #a8b3c7;
+      border-radius: 14px;
+      padding: 10px;
+      background: #fbfcff;
+    }
+    .photoBox strong { display: block; font-size: .95rem; margin-bottom: 7px; }
+    .photoBox input { font-size: .85rem; padding: 8px; }
+    .photoName { margin-top: 6px; font-size: .78rem; color: var(--muted); min-height: 1.1em; }
+    .actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 9;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, var(--bg) 78%, rgba(244,246,248,0));
+    }
+    button.primary, button.secondary, button.danger, button.good {
+      border: 0;
+      padding: 11px 9px;
+      font-weight: 800;
+      cursor: pointer;
+      min-height: 46px;
+    }
+    button.primary { background: var(--brand2); color: white; }
+    button.secondary { background: #e5e7eb; color: #111827; }
+    button.good { background: var(--good); color: white; }
+    button.danger { background: #fee2e2; color: var(--bad); border: 1px solid #fecaca; }
+    .small { font-size: .82rem; color: var(--muted); }
+    .status { font-weight: 800; color: var(--good); margin-top: 8px; min-height: 1.2em; }
+    .hidden { display: none; }
+    .report {
+      white-space: pre-wrap;
+      background: #0f172a;
+      color: #e5e7eb;
+      border-radius: 14px;
+      padding: 12px;
+      overflow: auto;
+      max-height: 460px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .84rem;
+    }
+    @media (max-width: 680px) {
+      .grid, .grid3, .checklist, .photos { grid-template-columns: 1fr; }
+      .actions { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media print {
+      header, .actions, .noPrint, input[type=file], button { display: none !important; }
+      body { background: white; }
+      main { max-width: none; padding: 0; }
+      .card { box-shadow: none; border: 1px solid #999; break-inside: avoid; }
+      input, textarea, select { border: 0; padding: 0; }
+      .report { color: black; background: white; border: 0; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Chris Inspection Assistant</h1>
+    <p>Fast field notes, photo checklist, OBS exterior workflow, and printable report.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. Job Information</h2>
+      <div class="grid">
+        <div><label for="insured">Insured Name</label><input id="insured" autocomplete="name" /></div>
+        <div><label for="inspectionId">Inspection ID #</label><input id="inspectionId" /></div>
+        <div><label for="address">Address</label><input id="address" autocomplete="street-address" /></div>
+        <div><label for="date">Inspection Date</label><input id="date" type="date" /></div>
+        <div><label for="yearBuilt">Year House Built</label><input id="yearBuilt" inputmode="numeric" /></div>
+        <div><label for="occupancy">Occupancy</label><select id="occupancy"><option></option><option>Owner occupied</option><option>Tenant occupied</option><option>Vacant</option><option>Unknown</option></select></div>
+      </div>
+      <p class="small">This saves automatically on this device.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Inspection Type</h2>
+      <div class="pillbar" id="typePills">
+        <button class="pill active" type="button" data-value="External inspection - OBS / observation only - no measurements">External OBS - No Measurements</button>
+        <button class="pill" type="button" data-value="Exterior with measurements">Exterior w/ Measurements</button>
+        <button class="pill" type="button" data-value="Interior and exterior">Interior + Exterior</button>
+        <button class="pill" type="button" data-value="Custom inspection">Custom</button>
+      </div>
+      <input id="inspectionType" class="hidden" value="External inspection - OBS / observation only - no measurements" />
+    </section>
+
+    <section class="card">
+      <h2>3. Exterior / Roof / Foundation</h2>
+      <div class="grid3">
+        <div><label for="roofAge">Age of Roof</label><input id="roofAge" placeholder="ex: 8 years / unknown" /></div>
+        <div><label for="roofMaterial">Roof Material</label><select id="roofMaterial"><option></option><option>Asphalt shingles</option><option>Metal</option><option>Slate</option><option>Tile</option><option>Flat / membrane</option><option>Other</option></select></div>
+        <div><label for="roofCondition">Roof Condition</label><select id="roofCondition"><option></option><option>Good</option><option>Average</option><option>Fair</option><option>Poor</option><option>Unable to determine</option></select></div>
+        <div><label for="wallMaterial">Exterior Wall Material</label><select id="wallMaterial"><option></option><option>Vinyl siding</option><option>Aluminum siding</option><option>Wood siding</option><option>Brick veneer</option><option>Stone veneer</option><option>Stucco</option><option>Fiber cement</option><option>Other / mixed</option></select></div>
+        <div><label for="foundation">Foundation Type</label><select id="foundation"><option></option><option>Basement</option><option>Crawlspace</option><option>Slab</option><option>Pier / post</option><option>Mixed / unknown</option></select></div>
+        <div><label for="stories">Stories</label><select id="stories"><option></option><option>1 story</option><option>1.5 story</option><option>2 story</option><option>2.5+ story</option></select></div>
+      </div>
+      <label for="exteriorNotes" style="margin-top:10px;">Exterior Observations</label>
+      <textarea id="exteriorNotes" placeholder="Siding, trim, gutters, downspouts, porch/deck, detached structures, hazards, maintenance concerns..."></textarea>
+    </section>
+
+    <section class="card">
+      <h2>4. Systems</h2>
+      <div class="grid3">
+        <div><label for="hvac">HVAC</label><input id="hvac" placeholder="ex: Central AC / gas furnace" /></div>
+        <div><label for="hvacAge">HVAC Age</label><input id="hvacAge" placeholder="ex: 8 years / unknown" /></div>
+        <div><label for="electric">Electric</label><input id="electric" placeholder="ex: 100 amp breakers" /></div>
+        <div><label for="plumbing">Plumbing</label><select id="plumbing"><option></option><option>Copper</option><option>PEX</option><option>CPVC</option><option>Galvanized</option><option>Mixed / unknown</option></select></div>
+        <div><label for="heatFuel">Heating Fuel</label><select id="heatFuel"><option></option><option>Natural gas</option><option>Propane</option><option>Electric</option><option>Fuel oil</option><option>Other / unknown</option></select></div>
+        <div><label for="waterHeater">Water Heater</label><input id="waterHeater" placeholder="type / age / condition" /></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5. Required Photo Checklist</h2>
+      <div class="photos" id="photoList"></div>
+      <p class="small noPrint">Use these buttons to take/attach photos in the field. The final written report lists what photo slots were filled.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Interior Photo Checklist</h2>
+      <div class="checklist" id="interiorChecklist"></div>
+      <label for="interiorNotes" style="margin-top:10px;">Interior Notes</label>
+      <textarea id="interiorNotes" placeholder="Kitchen, bathrooms, living areas, basement/crawl/attic if accessible. No bedroom photos unless required."></textarea>
+    </section>
+
+    <section class="card">
+      <h2>7. Conditions / Hazards</h2>
+      <div class="checklist" id="hazardChecklist"></div>
+      <label for="hazardNotes" style="margin-top:10px;">Hazard / Concern Notes</label>
+      <textarea id="hazardNotes" placeholder="Tree overhang, missing handrails, trip hazards, roof damage, peeling paint, debris, animals, locked gates, access issues..."></textarea>
+    </section>
+
+    <section class="card">
+      <h2>8. Final Notes</h2>
+      <textarea id="finalNotes" placeholder="Anything the carrier or reviewer needs to know..."></textarea>
+      <div class="status" id="saveStatus"></div>
+    </section>
+
+    <section class="card noPrint">
+      <h2>Report Preview</h2>
+      <pre class="report" id="reportBox">Tap “Build Report” to preview.</pre>
+    </section>
+
+    <div class="actions noPrint">
+      <button class="primary" type="button" id="buildBtn">Build Report</button>
+      <button class="good" type="button" id="copyBtn">Copy Report</button>
+      <button class="secondary" type="button" id="printBtn">Print / PDF</button>
+      <button class="danger" type="button" id="clearBtn">Clear</button>
+    </div>
+  </main>
+
+<script>
+(function(){
+  const fields = [
+    'insured','inspectionId','address','date','yearBuilt','occupancy','inspectionType','roofAge','roofMaterial','roofCondition',
+    'wallMaterial','foundation','stories','exteriorNotes','hvac','hvacAge','electric','plumbing','heatFuel','waterHeater',
+    'interiorNotes','hazardNotes','finalNotes'
+  ];
+  const photos = [
+    'Front elevation','Rear elevation','Left side','Right side','Front roof','Rear roof','Up-close roof front','Up-close roof rear',
+    'Exterior wall material','Foundation type','Address verification','HVAC exterior unit','Electric meter / service','Outbuildings / detached structures'
+  ];
+  const interior = ['Kitchen','Bathroom 1','Bathroom 2 / additional bath','HVAC unit','Electric panel','Water heater','Basement / crawlspace','Attic access','Smoke/CO detectors','General interior condition'];
+  const hazards = ['Trip/fall hazard','Missing handrail/guardrail','Tree limbs over roof','Roof damage/wear','Peeling paint','Poor drainage','Debris/storage hazard','Animal/access issue','Vacant/secured issue','Other concern'];
+  const storeKey = 'chrisInspectionAssistant.v1';
+  const el = id => document.getElementById(id);
+  const today = new Date().toISOString().slice(0,10);
+  if (!el('date').value) el('date').value = today;
+
+  function makePhotoBoxes(){
+    const wrap = el('photoList');
+    photos.forEach((name, i) => {
+      const box = document.createElement('div');
+      box.className = 'photoBox';
+      box.innerHTML = `<strong>${name}</strong><input id="photo_${i}" type="file" accept="image/*" capture="environment"><div class="photoName" id="photoName_${i}"></div>`;
+      wrap.appendChild(box);
+    });
+  }
+  function makeChecks(list, wrapId, prefix){
+    const wrap = el(wrapId);
+    list.forEach((name, i) => {
+      const label = document.createElement('label');
+      label.className = 'checkitem';
+      label.innerHTML = `<input id="${prefix}_${i}" type="checkbox"><span>${name}</span>`;
+      wrap.appendChild(label);
+    });
+  }
+  makePhotoBoxes();
+  makeChecks(interior, 'interiorChecklist', 'interior');
+  makeChecks(hazards, 'hazardChecklist', 'hazard');
+
+  function currentData(){
+    const data = {};
+    fields.forEach(id => data[id] = el(id).value || '');
+    data.interiorChecks = interior.map((name,i)=>({name, checked: el('interior_'+i).checked}));
+    data.hazardChecks = hazards.map((name,i)=>({name, checked: el('hazard_'+i).checked}));
+    data.photoNames = photos.map((name,i)=>({name, file: el('photo_'+i).files[0]?.name || el('photoName_'+i).textContent || ''}));
+    return data;
+  }
+  function save(){
+    const data = currentData();
+    try { localStorage.setItem(storeKey, JSON.stringify(data)); } catch(e) {}
+    el('saveStatus').textContent = 'Saved';
+    clearTimeout(window.__saveTimer);
+    window.__saveTimer = setTimeout(()=> el('saveStatus').textContent = '', 1200);
+  }
+  function load(){
+    try {
+      const raw = localStorage.getItem(storeKey); if (!raw) return;
+      const data = JSON.parse(raw);
+      fields.forEach(id => { if (data[id] !== undefined) el(id).value = data[id]; });
+      if (data.interiorChecks) data.interiorChecks.forEach((c,i)=> { if (el('interior_'+i)) el('interior_'+i).checked = !!c.checked; });
+      if (data.hazardChecks) data.hazardChecks.forEach((c,i)=> { if (el('hazard_'+i)) el('hazard_'+i).checked = !!c.checked; });
+      if (data.photoNames) data.photoNames.forEach((p,i)=> { if (el('photoName_'+i)) el('photoName_'+i).textContent = p.file ? 'Attached: ' + p.file : ''; });
+      document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.value === el('inspectionType').value));
+    } catch(e) {}
+  }
+  load();
+
+  document.querySelectorAll('input,select,textarea').forEach(node => {
+    node.addEventListener('input', save);
+    node.addEventListener('change', save);
+  });
+  photos.forEach((name,i)=>{
+    el('photo_'+i).addEventListener('change', () => {
+      const f = el('photo_'+i).files[0];
+      el('photoName_'+i).textContent = f ? 'Attached: ' + f.name : '';
+      save();
+    });
+  });
+  document.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      el('inspectionType').value = btn.dataset.value;
+      save();
+    });
+  });
+
+  function val(id){ return (el(id).value || '').trim() || 'Not noted'; }
+  function checkedList(arr, prefix){
+    const checked = arr.filter((name,i)=>el(prefix+'_'+i).checked);
+    return checked.length ? checked.join(', ') : 'None checked';
+  }
+  function photoStatus(){
+    return photos.map((name,i)=>{
+      const f = el('photo_'+i).files[0]?.name || el('photoName_'+i).textContent.replace('Attached: ','');
+      return `- ${name}: ${f ? 'Attached' : 'Needed'}`;
+    }).join('\n');
+  }
+  function buildReport(){
+    const report = `CHRIS INSPECTION ASSISTANT REPORT\n\nJOB INFORMATION\nInsured Name: ${val('insured')}\nAddress: ${val('address')}\nInspection ID #: ${val('inspectionId')}\nInspection Date: ${val('date')}\nInspection Type: ${val('inspectionType')}\nYear Built: ${val('yearBuilt')}\nOccupancy: ${val('occupancy')}\n\nEXTERIOR / ROOF / FOUNDATION\nRoof Age: ${val('roofAge')}\nRoof Material: ${val('roofMaterial')}\nRoof Condition: ${val('roofCondition')}\nExterior Wall Material: ${val('wallMaterial')}\nFoundation Type: ${val('foundation')}\nStories: ${val('stories')}\nExterior Observations: ${val('exteriorNotes')}\n\nSYSTEMS\nHVAC: ${val('hvac')}\nHVAC Age: ${val('hvacAge')}\nElectric: ${val('electric')}\nPlumbing: ${val('plumbing')}\nHeating Fuel: ${val('heatFuel')}\nWater Heater: ${val('waterHeater')}\n\nPHOTO CHECKLIST\n${photoStatus()}\n\nINTERIOR CHECKLIST\nCompleted/Needed: ${checkedList(interior, 'interior')}\nInterior Notes: ${val('interiorNotes')}\n\nCONDITIONS / HAZARDS\nChecked Concerns: ${checkedList(hazards, 'hazard')}\nHazard Notes: ${val('hazardNotes')}\n\nFINAL NOTES\n${val('finalNotes')}\n`;
+    el('reportBox').textContent = report;
+    return report;
+  }
+  el('buildBtn').addEventListener('click', buildReport);
+  el('copyBtn').addEventListener('click', async ()=>{
+    const report = buildReport();
+    try { await navigator.clipboard.writeText(report); el('saveStatus').textContent = 'Report copied'; }
+    catch(e) { el('saveStatus').textContent = 'Copy failed. Select report text and copy.'; }
+  });
+  el('printBtn').addEventListener('click', ()=>{ buildReport(); window.print(); });
+  el('clearBtn').addEventListener('click', ()=>{
+    if (!confirm('Clear this inspection from this device?')) return;
+    localStorage.removeItem(storeKey);
+    fields.forEach(id => el(id).value = '');
+    el('date').value = today;
+    interior.forEach((n,i)=> el('interior_'+i).checked = false);
+    hazards.forEach((n,i)=> el('hazard_'+i).checked = false);
+    photos.forEach((n,i)=> { el('photo_'+i).value=''; el('photoName_'+i).textContent=''; });
+    el('inspectionType').value = 'External inspection - OBS / observation only - no measurements';
+    document.querySelectorAll('.pill').forEach((b,idx)=>b.classList.toggle('active', idx===0));
+    el('reportBox').textContent = 'Tap “Build Report” to preview.';
+    save();
+  });
+})();
+</script>
+</body>
+</html>
